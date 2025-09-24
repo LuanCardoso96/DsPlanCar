@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { FirestoreService } from "@/firebase/services";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -122,92 +123,35 @@ export default function People() {
     });
   };
 
-  const loadPeople = () => {
-    // Mock people data
-    const mockPeople = [
-      {
-        id: 1,
-        name: "João Silva",
-        email: "joao.silva@empresa.com",
-        phone: "(11) 99999-9999",
-        department: "TI",
-        position: "Desenvolvedor",
-        driver_license: "12345678901",
-        license_category: "B",
-        license_expiry: "2024-12-31",
-        status: "active",
-        notes: "Funcionário exemplar",
-        created_date: "2024-01-01T00:00:00"
-      },
-      {
-        id: 2,
-        name: "Maria Santos",
-        email: "maria.santos@empresa.com",
-        phone: "(11) 88888-8888",
-        department: "RH",
-        position: "Analista",
-        driver_license: "98765432109",
-        license_category: "AB",
-        license_expiry: "2024-06-15",
-        status: "active",
-        notes: "",
-        created_date: "2024-01-02T00:00:00"
-      },
-      {
-        id: 3,
-        name: "Pedro Costa",
-        email: "pedro.costa@empresa.com",
-        phone: "(11) 77777-7777",
-        department: "Vendas",
-        position: "Vendedor",
-        driver_license: "11223344556",
-        license_category: "B",
-        license_expiry: "2024-03-20",
-        status: "active",
-        notes: "CNH vencendo em breve",
-        created_date: "2024-01-03T00:00:00"
-      },
-      {
-        id: 4,
-        name: "Ana Oliveira",
-        email: "ana.oliveira@empresa.com",
-        phone: "(11) 66666-6666",
-        department: "Financeiro",
-        position: "Contadora",
-        driver_license: "99887766554",
-        license_category: "B",
-        license_expiry: "2025-01-10",
-        status: "inactive",
-        notes: "Em licença médica",
-        created_date: "2024-01-04T00:00:00"
-      }
-    ];
-    setPeople(mockPeople);
+  const loadPeople = async () => {
+    try {
+      const data = await FirestoreService.getPeople();
+      setPeople(data);
+    } catch (error) {
+      console.error("Error loading people:", error);
+    }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
       if (selectedPerson) {
-        // Update existing person
-        setPeople(prev => prev.map(p => p.id === selectedPerson.id ? { ...formData, id: selectedPerson.id } : p));
+        await FirestoreService.updatePerson(selectedPerson.id, formData);
       } else {
-        // Create new person
-        const newPerson = {
-          ...formData,
-          id: Date.now(), // Simple ID generation
-          created_date: new Date().toISOString()
-        };
-        setPeople(prev => [newPerson, ...prev]);
+        await FirestoreService.createPerson(formData);
       }
       
+      loadPeople();
       setIsDialogOpen(false);
       resetForm();
+    } catch (error) {
+      console.error("Error saving person:", error);
+      alert("Erro ao salvar funcionário. Tente novamente.");
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   const handleEdit = (person) => {
@@ -216,12 +160,18 @@ export default function People() {
     setIsDialogOpen(true);
   };
 
-  const handleArchive = (personId) => {
-    setPeople(prev => prev.map(p => 
-      p.id === personId 
-        ? { ...p, status: p.status === 'archived' ? 'active' : 'archived' }
-        : p
-    ));
+  const handleArchive = async (personId) => {
+    try {
+      const person = people.find(p => p.id === personId);
+      await FirestoreService.updatePerson(personId, { 
+        ...person, 
+        status: person.status === 'archived' ? 'active' : 'archived' 
+      });
+      loadPeople();
+    } catch (error) {
+      console.error("Error archiving person:", error);
+      alert("Erro ao arquivar funcionário. Tente novamente.");
+    }
   };
 
   const handleDeleteClick = (person) => {
@@ -229,12 +179,18 @@ export default function People() {
     setIsDeleteDialogOpen(true);
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (!personToDelete) return;
     
-    setPeople(prev => prev.filter(p => p.id !== personToDelete.id));
-    setIsDeleteDialogOpen(false);
-    setPersonToDelete(null);
+    try {
+      await FirestoreService.deletePerson(personToDelete.id);
+      loadPeople();
+      setIsDeleteDialogOpen(false);
+      setPersonToDelete(null);
+    } catch (error) {
+      console.error("Error deleting person:", error);
+      alert("Erro ao excluir funcionário. Tente novamente.");
+    }
   };
 
   const resetForm = () => {

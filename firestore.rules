@@ -1,9 +1,51 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Função para verificar se o usuário está autenticado
+    function isSignedIn() { 
+      return request.auth != null; 
+    }
+
+    // Função para verificar se o usuário é o proprietário do documento
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // Regras para todas as coleções - permitir leitura e escrita para usuários autenticados
     match /{document=**} {
-      allow read, write: if false;
+      allow read, write: if isSignedIn();
+    }
+
+    // Regras específicas para cada coleção (opcional - mais restritivas)
+    
+    // Coleção de pessoas
+    match /people/{personId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // Coleção de veículos
+    match /vehicles/{vehicleId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // Coleção de saídas
+    match /saidas/{saidaId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // Coleção de agendamentos
+    match /agendamentos/{agendamentoId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // Coleção de documentos
+    match /documentos/{documentoId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // Coleção de usuários
+    match /users/{userId} {
+      allow read, write: if isSignedIn();
     }
   }
 }

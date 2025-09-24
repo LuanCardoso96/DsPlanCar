@@ -2,6 +2,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { AuthService } from "@/firebase/services";
+import LoginForm from "@/components/LoginForm";
 import {
   Sidebar,
   SidebarContent,
@@ -23,6 +25,8 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard,
   Car,
@@ -58,25 +62,25 @@ const navigationItems = [
   },
   {
     title: "Saídas",
-    url: createPageUrl("VehicleExits"),
+    url: createPageUrl("Saidas"),
     icon: LogOut,
     roles: ["MASTER", "ADMIN", "OPERADOR"],
   },
   {
     title: "Agendamentos",
-    url: createPageUrl("Schedules"),
+    url: createPageUrl("Agendamentos"),
     icon: Calendar,
     roles: ["MASTER", "ADMIN", "OPERADOR"],
   },
   {
     title: "Documentos",
-    url: createPageUrl("Documents"),
+    url: createPageUrl("Documentos"),
     icon: FileText,
     roles: ["MASTER", "ADMIN"],
   },
   {
     title: "Relatórios",
-    url: createPageUrl("Reports"),
+    url: createPageUrl("Relatorios"),
     icon: BarChart3,
     roles: ["MASTER", "ADMIN"],
   },
@@ -97,24 +101,33 @@ export default function Layout({ children, currentPageName }) {
   });
 
   const loadCurrentUser = useCallback(() => {
-    // Mock user data
-    const mockUser = {
-      full_name: "João Silva",
-      email: "joao.silva@empresa.com",
-      role: "ADMIN",
-      settings: {
-        theme: {
+    // Listen for auth state changes
+    const unsubscribe = AuthService.onAuthStateChanged((user) => {
+      if (user) {
+        setCurrentUser({
+          uid: user.uid,
+          full_name: user.displayName || "Usuário",
+          email: user.email,
+          photoURL: user.photoURL,
+          role: "ADMIN" // Default role, can be updated from Firestore
+        });
+        applyTheme({
           primary_color: "#22c55e",
           dark_mode: false
-        }
+        });
+      } else {
+        setCurrentUser(null);
       }
-    };
-    setCurrentUser(mockUser);
-    applyTheme(mockUser.settings.theme);
+    });
+
+    return unsubscribe;
   }, []);
 
   useEffect(() => {
-    loadCurrentUser();
+    const unsubscribe = loadCurrentUser();
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, [loadCurrentUser]);
 
   const applyTheme = (themeSettings) => {
@@ -128,16 +141,25 @@ export default function Layout({ children, currentPageName }) {
     }
   };
 
-  const handleLogout = () => {
-    setCurrentUser(null);
+  const handleLogout = async () => {
+    try {
+      await AuthService.signOut();
+      setCurrentUser(null);
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
   };
 
   const filteredNavItems = navigationItems.filter(item => 
     !currentUser || item.roles.includes(currentUser.role)
   );
 
+  const handleLoginSuccess = () => {
+    // Login successful, the AuthService.onAuthStateChanged will handle the rest
+  };
+
   if (!currentUser) {
-    return children;
+    return <LoginForm onLoginSuccess={handleLoginSuccess} />;
   }
 
   return (

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { getRelatoriosResumo, getVehicles, getPeople } from "@/services/FirestoreService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -33,90 +34,57 @@ export default function Dashboard() {
   }, []);
 
   const loadCurrentUser = () => {
-    // Mock user data
+    // Mock user data - will be replaced by real auth data from Layout
     setCurrentUser({
-      full_name: "João Silva",
-      email: "joao.silva@empresa.com",
+      full_name: "Usuário",
+      email: "usuario@empresa.com",
       department: "TI"
     });
   };
 
-  const loadDashboardData = () => {
-    // Mock data
-    const mockVehicles = [
-      { id: 1, brand: "Toyota", model: "Corolla", status: "available", insurance_expiry: "2024-02-15", license_expiry: "2024-03-20" },
-      { id: 2, brand: "Honda", model: "Civic", status: "available", insurance_expiry: "2024-01-30", license_expiry: "2024-02-10" },
-      { id: 3, brand: "Ford", model: "Focus", status: "in_use", insurance_expiry: "2024-04-05", license_expiry: "2024-05-15" },
-      { id: 4, brand: "Volkswagen", model: "Golf", status: "maintenance", insurance_expiry: "2024-03-10", license_expiry: "2024-04-25" },
-    ];
+  const loadDashboardData = async () => {
+    try {
+      const [resumo, vehicles, people] = await Promise.all([
+        getRelatoriosResumo(),
+        getVehicles(),
+        getPeople()
+      ]);
 
-    const mockPeople = [
-      { id: 1, name: "João Silva", status: "active" },
-      { id: 2, name: "Maria Santos", status: "active" },
-      { id: 3, name: "Pedro Costa", status: "active" },
-      { id: 4, name: "Ana Oliveira", status: "active" },
-    ];
+      setStats({
+        totalVehicles: vehicles.length,
+        availableVehicles: vehicles.filter(v => v.status === 'available').length,
+        totalPeople: people.length,
+        activeExits: resumo.saidasEmAndamento,
+        pendingSchedules: resumo.agPendentes,
+      });
 
-    const mockExits = [
-      { id: 1, vehicle_id: 3, person_id: 1, status: "in_progress", departure_date: "2024-01-15T08:30:00" },
-      { id: 2, vehicle_id: 1, person_id: 2, status: "completed", departure_date: "2024-01-14T14:20:00" },
-    ];
+      // Load recent exits
+      setRecentExits(resumo.ultimasSaidas);
 
-    const mockSchedules = [
-      { id: 1, vehicle_id: 2, person_id: 3, status: "approved", destination: "São Paulo", scheduled_departure: "2024-01-16T09:00:00" },
-      { id: 2, vehicle_id: 4, person_id: 4, status: "pending", destination: "Rio de Janeiro", scheduled_departure: "2024-01-17T10:30:00" },
-    ];
+      // Load upcoming schedules
+      setUpcomingSchedules(resumo.proximosAgendamentos);
 
-    setStats({
-      totalVehicles: mockVehicles.length,
-      availableVehicles: mockVehicles.filter(v => v.status === "available").length,
-      totalPeople: mockPeople.length,
-      activeExits: mockExits.filter(e => e.status === "in_progress").length,
-      pendingSchedules: mockSchedules.filter(s => s.status === "pending").length,
-    });
-
-    // Load recent exits with details
-    const exitsWithDetails = mockExits.map(exit => ({
-      ...exit,
-      vehicle: mockVehicles.find(v => v.id === exit.vehicle_id),
-      person: mockPeople.find(p => p.id === exit.person_id),
-    }));
-    setRecentExits(exitsWithDetails);
-
-    // Load upcoming schedules with details
-    const schedulesWithDetails = mockSchedules.map(schedule => ({
-      ...schedule,
-      vehicle: mockVehicles.find(v => v.id === schedule.vehicle_id),
-      person: mockPeople.find(p => p.id === schedule.person_id),
-    }));
-    setUpcomingSchedules(schedulesWithDetails);
-
-    // Generate alerts
-    const alertsData = [];
-    
-    mockVehicles.forEach(vehicle => {
-      if (vehicle.insurance_expiry) {
-        const daysUntilExpiry = Math.ceil((new Date(vehicle.insurance_expiry) - new Date()) / (1000 * 60 * 60 * 24));
-        if (daysUntilExpiry <= 30 && daysUntilExpiry > 0) {
-          alertsData.push({
-            type: "warning",
-            message: `Seguro do ${vehicle.brand} ${vehicle.model} vence em ${daysUntilExpiry} dias`,
-          });
-        }
+      // Generate alerts
+      const alertsData = [];
+      
+      if (resumo.saidasEmAndamento > 0) {
+        alertsData.push({
+          type: "info",
+          message: `${resumo.saidasEmAndamento} saída(s) em andamento`,
+        });
       }
       
-      if (vehicle.license_expiry) {
-        const daysUntilExpiry = Math.ceil((new Date(vehicle.license_expiry) - new Date()) / (1000 * 60 * 60 * 24));
-        if (daysUntilExpiry <= 30 && daysUntilExpiry > 0) {
-          alertsData.push({
-            type: "warning",
-            message: `Licenciamento do ${vehicle.brand} ${vehicle.model} vence em ${daysUntilExpiry} dias`,
-          });
-        }
+      if (resumo.agPendentes > 0) {
+        alertsData.push({
+          type: "warning",
+          message: `${resumo.agPendentes} agendamento(s) pendente(s)`,
+        });
       }
-    });
-    
-    setAlerts(alertsData);
+      
+      setAlerts(alertsData);
+    } catch (error) {
+      console.error("Error loading dashboard data:", error);
+    }
   };
 
   const StatCard = ({ title, value, icon: Icon, color, subtitle }) => (
@@ -230,28 +198,32 @@ export default function Dashboard() {
                         </div>
                         <div>
                           <p className="font-medium text-gray-900">
-                            {exit.vehicle?.brand} {exit.vehicle?.model}
+                            Saída #{exit.id.slice(-6)}
                           </p>
                           <p className="text-sm text-gray-500">
-                            {exit.person?.name}
+                            {exit.purpose || 'Sem descrição'}
                           </p>
                         </div>
                       </div>
                       <div className="text-right">
                         <Badge 
-                          variant={exit.status === 'completed' ? 'default' : 'secondary'}
-                          className={exit.status === 'in_progress' ? 'bg-orange-100 text-orange-800' : ''}
+                          variant={exit.status === 'concluida' ? 'default' : 'secondary'}
+                          className={exit.status === 'em_andamento' ? 'bg-orange-100 text-orange-800' : ''}
                         >
-                          {exit.status === 'in_progress' ? 'Em Andamento' : 'Concluída'}
+                          {exit.status === 'em_andamento' ? 'Em Andamento' : exit.status === 'concluida' ? 'Concluída' : 'Cancelada'}
                         </Badge>
                         <p className="text-xs text-gray-500 mt-1">
-                          {format(new Date(exit.departure_date), "dd/MM HH:mm")}
+                          {exit.startedAt ? new Date(exit.startedAt.seconds * 1000).toLocaleDateString('pt-BR') : 'Sem data'}
                         </p>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <p className="text-gray-500 text-center py-8">Nenhuma saída recente</p>
+                  <div className="text-center py-8">
+                    <Car className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-500">Nenhuma saída registrada</p>
+                    <p className="text-gray-400 text-sm mt-1">As saídas aparecerão aqui quando forem registradas</p>
+                  </div>
                 )}
               </div>
             </CardContent>
@@ -276,26 +248,29 @@ export default function Dashboard() {
                         </div>
                         <div>
                           <p className="font-medium text-gray-900">
-                            {schedule.vehicle?.brand} {schedule.vehicle?.model}
+                            {schedule.title || 'Agendamento'}
                           </p>
-                          <p className="text-sm text-gray-500 flex items-center gap-1">
-                            <MapPin className="h-3 w-3" />
-                            {schedule.destination}
+                          <p className="text-sm text-gray-500">
+                            {schedule.description || 'Sem descrição'}
                           </p>
                         </div>
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-medium text-gray-900">
-                          {format(new Date(schedule.scheduled_departure), "dd/MM")}
+                          {schedule.startAt ? new Date(schedule.startAt.seconds * 1000).toLocaleDateString('pt-BR') : 'Sem data'}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {format(new Date(schedule.scheduled_departure), "HH:mm")}
+                          {schedule.startAt ? new Date(schedule.startAt.seconds * 1000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'Sem hora'}
                         </p>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <p className="text-gray-500 text-center py-8">Nenhum agendamento próximo</p>
+                  <div className="text-center py-8">
+                    <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-500">Nenhum agendamento aprovado</p>
+                    <p className="text-gray-400 text-sm mt-1">Os agendamentos aprovados aparecerão aqui</p>
+                  </div>
                 )}
               </div>
             </CardContent>

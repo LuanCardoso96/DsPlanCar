@@ -1,41 +1,27 @@
 import Layout from "./Layout.jsx";
 
 import Dashboard from "./Dashboard";
-
 import Vehicles from "./Vehicles";
-
 import People from "./People";
-
-import VehicleExits from "./VehicleExits";
-
-import Schedules from "./Schedules";
-
-import Documents from "./Documents";
-
-import Reports from "./Reports";
-
+import Saidas from "./Saidas";
+import Agendamentos from "./Agendamentos";
+import Documentos from "./Documentos";
+import Relatorios from "./Relatorios";
 import Settings from "./Settings";
+import FirebaseTest from "@/components/FirebaseTest";
 
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 
 const PAGES = {
-    
     Dashboard: Dashboard,
-    
     Vehicles: Vehicles,
-    
     People: People,
-    
-    VehicleExits: VehicleExits,
-    
-    Schedules: Schedules,
-    
-    Documents: Documents,
-    
-    Reports: Reports,
-    
+    Saidas: Saidas,
+    Agendamentos: Agendamentos,
+    Documentos: Documentos,
+    Relatorios: Relatorios,
     Settings: Settings,
-    
+    FirebaseTest: FirebaseTest,
 }
 
 function _getCurrentPage(url) {
@@ -59,26 +45,16 @@ function PagesContent() {
     return (
         <Layout currentPageName={currentPage}>
             <Routes>            
-                
-                    <Route path="/" element={<Dashboard />} />
-                
-                
+                <Route path="/" element={<Dashboard />} />
                 <Route path="/Dashboard" element={<Dashboard />} />
-                
                 <Route path="/Vehicles" element={<Vehicles />} />
-                
                 <Route path="/People" element={<People />} />
-                
-                <Route path="/VehicleExits" element={<VehicleExits />} />
-                
-                <Route path="/Schedules" element={<Schedules />} />
-                
-                <Route path="/Documents" element={<Documents />} />
-                
-                <Route path="/Reports" element={<Reports />} />
-                
+                <Route path="/Saidas" element={<Saidas />} />
+                <Route path="/Agendamentos" element={<Agendamentos />} />
+                <Route path="/Documentos" element={<Documentos />} />
+                <Route path="/Relatorios" element={<Relatorios />} />
                 <Route path="/Settings" element={<Settings />} />
-                
+                <Route path="/FirebaseTest" element={<FirebaseTest />} />
             </Routes>
         </Layout>
     );

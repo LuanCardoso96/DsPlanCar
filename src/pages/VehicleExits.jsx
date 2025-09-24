@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { FirestoreService } from "@/firebase/services";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -94,85 +95,42 @@ export default function VehicleExits() {
     });
   };
 
-  const loadData = () => {
-    // Mock exits data
-    const mockExits = [
-      {
-        id: 1,
-        vehicle_id: 1,
-        person_id: 1,
-        departure_date: "2024-01-15T08:30:00",
-        return_date: "2024-01-15T17:00:00",
-        destination: "São Paulo",
-        purpose: "Reunião de negócios",
-        status: "completed",
-        notes: "Reunião importante",
-        created_date: "2024-01-15T00:00:00"
-      },
-      {
-        id: 2,
-        vehicle_id: 2,
-        person_id: 2,
-        departure_date: "2024-01-16T09:00:00",
-        return_date: "",
-        destination: "Rio de Janeiro",
-        purpose: "Visita técnica",
-        status: "in_progress",
-        notes: "",
-        created_date: "2024-01-16T00:00:00"
-      },
-      {
-        id: 3,
-        vehicle_id: 3,
-        person_id: 3,
-        departure_date: "2024-01-14T14:00:00",
-        return_date: "2024-01-14T18:00:00",
-        destination: "Brasília",
-        purpose: "Apresentação",
-        status: "completed",
-        notes: "Apresentação bem-sucedida",
-        created_date: "2024-01-14T00:00:00"
-      }
-    ];
-    setExits(mockExits);
-
-    // Mock vehicles data
-    const mockVehicles = [
-      { id: 1, brand: "Toyota", model: "Corolla", license_plate: "ABC-1234" },
-      { id: 2, brand: "Honda", model: "Civic", license_plate: "DEF-5678" },
-      { id: 3, brand: "Ford", model: "Focus", license_plate: "GHI-9012" }
-    ];
-    setVehicles(mockVehicles);
-
-    // Mock people data
-    const mockPeople = [
-      { id: 1, name: "João Silva", department: "TI" },
-      { id: 2, name: "Maria Santos", department: "RH" },
-      { id: 3, name: "Pedro Costa", department: "Vendas" }
-    ];
-    setPeople(mockPeople);
+  const loadData = async () => {
+    try {
+      const [exitsData, vehiclesData, peopleData] = await Promise.all([
+        FirestoreService.getVehicleExits(),
+        FirestoreService.getVehicles(),
+        FirestoreService.getPeople()
+      ]);
+      
+      setExits(exitsData);
+      setVehicles(vehiclesData);
+      setPeople(peopleData);
+    } catch (error) {
+      console.error("Error loading data:", error);
+    }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     
-    setTimeout(() => {
+    try {
       if (selectedExit) {
-        setExits(prev => prev.map(e => e.id === selectedExit.id ? { ...formData, id: selectedExit.id } : e));
+        await FirestoreService.updateVehicleExit(selectedExit.id, formData);
       } else {
-        const newExit = {
-          ...formData,
-          id: Date.now(),
-          created_date: new Date().toISOString()
-        };
-        setExits(prev => [newExit, ...prev]);
+        await FirestoreService.createVehicleExit(formData);
       }
       
+      loadData();
       setIsDialogOpen(false);
       resetForm();
+    } catch (error) {
+      console.error("Error saving vehicle exit:", error);
+      alert("Erro ao salvar saída. Tente novamente.");
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   const handleEdit = (exit) => {
@@ -181,12 +139,17 @@ export default function VehicleExits() {
     setIsDialogOpen(true);
   };
 
-  const handleComplete = (exitId) => {
-    setExits(prev => prev.map(e => 
-      e.id === exitId 
-        ? { ...e, status: "completed", return_date: new Date().toISOString() }
-        : e
-    ));
+  const handleComplete = async (exitId) => {
+    try {
+      await FirestoreService.updateVehicleExit(exitId, {
+        status: "completed",
+        return_date: new Date().toISOString()
+      });
+      loadData();
+    } catch (error) {
+      console.error("Error completing exit:", error);
+      alert("Erro ao finalizar saída. Tente novamente.");
+    }
   };
 
   const resetForm = () => {

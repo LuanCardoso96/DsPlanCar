@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy:indexes": "firebase deploy --only firestore:indexes"
   },
   "dependencies": {
     "@hookform/resolvers": "^4.1.2",
@@ -42,6 +43,7 @@
     "cmdk": "^1.0.0",
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.5.2",
+    "firebase": "^12.3.0",
     "framer-motion": "^12.4.7",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.475.0",

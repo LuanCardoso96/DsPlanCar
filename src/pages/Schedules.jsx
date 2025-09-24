@@ -124,9 +124,9 @@ export default function Schedules() {
 
   const loadCurrentUser = () => {
     setCurrentUser({
-      full_name: "João Silva",
-      email: "joao.silva@empresa.com",
-      role: "ADMIN"
+      full_name: "exemplo",
+      email: "email",
+      role: "Funcionario"
     });
   };
 

@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { getVehicles, addVehicle, updateVehicle, deleteVehicle } from "@/firebase/vehicleService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,14 +32,10 @@ import {
   Archive,
   Trash2,
   AlertTriangle,
-  Calendar,
   Fuel,
   MapPin,
   CheckCircle,
-  XCircle,
-  Clock,
 } from "lucide-react";
-import { format } from "date-fns";
 
 const vehicleTypes = [
   { value: "sedan", label: "Sedan" },
@@ -131,100 +128,35 @@ export default function Vehicles() {
     });
   };
 
-  const loadVehicles = () => {
-    // Mock vehicles data
-    const mockVehicles = [
-      {
-        id: 1,
-        brand: "Toyota",
-        model: "Corolla",
-        year: 2022,
-        license_plate: "ABC-1234",
-        color: "Prata",
-        vehicle_type: "sedan",
-        fuel_type: "gasoline",
-        status: "available",
-        mileage: 15000,
-        insurance_expiry: "2024-12-31",
-        license_expiry: "2024-06-15",
-        notes: "Veículo em excelente estado",
-        created_date: "2024-01-01T00:00:00"
-      },
-      {
-        id: 2,
-        brand: "Honda",
-        model: "Civic",
-        year: 2021,
-        license_plate: "DEF-5678",
-        color: "Branco",
-        vehicle_type: "sedan",
-        fuel_type: "gasoline",
-        status: "in_use",
-        mileage: 25000,
-        insurance_expiry: "2024-03-20",
-        license_expiry: "2024-08-10",
-        notes: "",
-        created_date: "2024-01-02T00:00:00"
-      },
-      {
-        id: 3,
-        brand: "Ford",
-        model: "Ranger",
-        year: 2023,
-        license_plate: "GHI-9012",
-        color: "Azul",
-        vehicle_type: "pickup",
-        fuel_type: "diesel",
-        status: "maintenance",
-        mileage: 8000,
-        insurance_expiry: "2024-11-15",
-        license_expiry: "2024-09-25",
-        notes: "Em manutenção preventiva",
-        created_date: "2024-01-03T00:00:00"
-      },
-      {
-        id: 4,
-        brand: "Volkswagen",
-        model: "Golf",
-        year: 2020,
-        license_plate: "JKL-3456",
-        color: "Preto",
-        vehicle_type: "sedan",
-        fuel_type: "gasoline",
-        status: "available",
-        mileage: 35000,
-        insurance_expiry: "2024-02-28",
-        license_expiry: "2024-04-30",
-        notes: "Necessita revisão",
-        created_date: "2024-01-04T00:00:00"
-      }
-    ];
-    setVehicles(mockVehicles);
+  const loadVehicles = async () => {
+    try {
+      const data = await getVehicles();
+      setVehicles(data);
+    } catch (error) {
+      console.error("Error loading vehicles:", error);
+    }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
       if (selectedVehicle) {
-        // Update existing vehicle
-        setVehicles(prev => prev.map(v => v.id === selectedVehicle.id ? { ...formData, id: selectedVehicle.id } : v));
+        await updateVehicle(selectedVehicle.id, formData);
       } else {
-        // Create new vehicle
-        const newVehicle = {
-          ...formData,
-          id: Date.now(), // Simple ID generation
-          created_date: new Date().toISOString()
-        };
-        setVehicles(prev => [newVehicle, ...prev]);
+        await addVehicle(formData);
       }
       
+      loadVehicles();
       setIsDialogOpen(false);
       resetForm();
+    } catch (error) {
+      console.error("Error saving vehicle:", error);
+      alert("Erro ao salvar veículo. Tente novamente.");
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   const handleEdit = (vehicle) => {
@@ -233,12 +165,18 @@ export default function Vehicles() {
     setIsDialogOpen(true);
   };
 
-  const handleArchive = (vehicleId) => {
-    setVehicles(prev => prev.map(v => 
-      v.id === vehicleId 
-        ? { ...v, status: v.status === 'archived' ? 'available' : 'archived' }
-        : v
-    ));
+  const handleArchive = async (vehicleId) => {
+    try {
+      const vehicle = vehicles.find(v => v.id === vehicleId);
+      await updateVehicle(vehicleId, { 
+        ...vehicle, 
+        status: vehicle.status === 'archived' ? 'available' : 'archived' 
+      });
+      loadVehicles();
+    } catch (error) {
+      console.error("Error archiving vehicle:", error);
+      alert("Erro ao arquivar veículo. Tente novamente.");
+    }
   };
 
   const handleDeleteClick = (vehicle) => {
@@ -246,12 +184,18 @@ export default function Vehicles() {
     setIsDeleteDialogOpen(true);
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (!vehicleToDelete) return;
     
-    setVehicles(prev => prev.filter(v => v.id !== vehicleToDelete.id));
-    setIsDeleteDialogOpen(false);
-    setVehicleToDelete(null);
+    try {
+      await deleteVehicle(vehicleToDelete.id);
+      loadVehicles();
+      setIsDeleteDialogOpen(false);
+      setVehicleToDelete(null);
+    } catch (error) {
+      console.error("Error deleting vehicle:", error);
+      alert("Erro ao excluir veículo. Tente novamente.");
+    }
   };
 
   const resetForm = () => {
