@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,18 +13,6 @@ import {
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import {
   Plus,
   Search,
@@ -37,7 +25,6 @@ import {
   User as UserIcon,
   Car,
   ArrowRight,
-  AlertTriangle,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -82,7 +69,6 @@ export default function Schedules() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [conflictCheck, setConflictCheck] = useState("");
 
   const [formData, setFormData] = useState({
     vehicle_id: "",
@@ -253,172 +239,188 @@ export default function Schedules() {
   };
 
   return (
-    <div className="p-4 md:p-8 min-h-screen">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Agendamentos</h1>
-            <p className="text-gray-600 mt-1">Gerencie os agendamentos de veículos</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-slate-100">
+      <div className="container mx-auto px-6 py-8">
+        {/* Header Profissional */}
+        <div className="mb-10">
+          <div className="flex items-center justify-between">
+            <div className="space-y-3">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                Agendamentos 📅
+              </h1>
+              <p className="text-lg text-gray-600 font-medium">
+                Gerencie os agendamentos de veículos
+              </p>
+              <div className="flex items-center gap-6 text-sm text-gray-500">
+                <div className="flex items-center gap-2">
+                  <CalendarIcon className="w-4 h-4" />
+                  <span>{filteredSchedules.length} agendamentos encontrados</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-yellow-500" />
+                  <span>{filteredSchedules.filter(s => s.status === 'pending').length} pendentes</span>
+                </div>
+              </div>
+            </div>
+            
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  className="h-12 px-6 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
+                  onClick={resetForm}
+                >
+                  <Plus className="w-5 h-5 mr-2" />
+                  Novo Agendamento
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>
+                    {selectedSchedule ? "Editar Agendamento" : "Novo Agendamento"}
+                  </DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="vehicle_id">Veículo *</Label>
+                      <Select
+                        value={formData.vehicle_id}
+                        onValueChange={(value) => setFormData({...formData, vehicle_id: value})}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecionar veículo" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {vehicles.filter(v => v.status === "available").map((vehicle) => (
+                            <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
+                              {vehicle.brand} {vehicle.model} - {vehicle.license_plate}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="person_id">Funcionário *</Label>
+                      <Select
+                        value={formData.person_id}
+                        onValueChange={(value) => setFormData({...formData, person_id: value})}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecionar funcionário" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {people.map((person) => (
+                            <SelectItem key={person.id} value={person.id.toString()}>
+                              {person.name} - {person.department}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="destination">Destino *</Label>
+                      <Input
+                        id="destination"
+                        value={formData.destination}
+                        onChange={(e) => setFormData({...formData, destination: e.target.value})}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="purpose">Finalidade *</Label>
+                      <Input
+                        id="purpose"
+                        value={formData.purpose}
+                        onChange={(e) => setFormData({...formData, purpose: e.target.value})}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="scheduled_departure">Data/Hora de Saída *</Label>
+                      <Input
+                        id="scheduled_departure"
+                        type="datetime-local"
+                        value={formData.scheduled_departure}
+                        onChange={(e) => setFormData({...formData, scheduled_departure: e.target.value})}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="scheduled_return">Data/Hora de Retorno *</Label>
+                      <Input
+                        id="scheduled_return"
+                        type="datetime-local"
+                        value={formData.scheduled_return}
+                        onChange={(e) => setFormData({...formData, scheduled_return: e.target.value})}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="priority">Prioridade</Label>
+                      <Select
+                        value={formData.priority}
+                        onValueChange={(value) => setFormData({...formData, priority: value})}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(priorityLabels).map(([value, label]) => (
+                            <SelectItem key={value} value={value}>
+                              {label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="status">Status</Label>
+                      <Select
+                        value={formData.status}
+                        onValueChange={(value) => setFormData({...formData, status: value})}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(statusLabels).map(([value, label]) => (
+                            <SelectItem key={value} value={value}>
+                              {label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="notes">Observações</Label>
+                    <Textarea
+                      id="notes"
+                      value={formData.notes}
+                      onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                      rows={3}
+                    />
+                  </div>
+                  <div className="flex justify-end gap-3 pt-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsDialogOpen(false)}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button 
+                      type="submit" 
+                      className="ds-primary text-white"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Salvando..." : selectedSchedule ? "Atualizar" : "Criar"}
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
           </div>
-          
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button 
-                className="ds-primary text-white shadow-lg hover:shadow-xl transition-all duration-300"
-                onClick={resetForm}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Novo Agendamento
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>
-                  {selectedSchedule ? "Editar Agendamento" : "Novo Agendamento"}
-                </DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="vehicle_id">Veículo *</Label>
-                    <Select
-                      value={formData.vehicle_id}
-                      onValueChange={(value) => setFormData({...formData, vehicle_id: value})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecionar veículo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {vehicles.filter(v => v.status === "available").map((vehicle) => (
-                          <SelectItem key={vehicle.id} value={vehicle.id.toString()}>
-                            {vehicle.brand} {vehicle.model} - {vehicle.license_plate}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="person_id">Funcionário *</Label>
-                    <Select
-                      value={formData.person_id}
-                      onValueChange={(value) => setFormData({...formData, person_id: value})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecionar funcionário" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {people.map((person) => (
-                          <SelectItem key={person.id} value={person.id.toString()}>
-                            {person.name} - {person.department}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="destination">Destino *</Label>
-                    <Input
-                      id="destination"
-                      value={formData.destination}
-                      onChange={(e) => setFormData({...formData, destination: e.target.value})}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="purpose">Finalidade *</Label>
-                    <Input
-                      id="purpose"
-                      value={formData.purpose}
-                      onChange={(e) => setFormData({...formData, purpose: e.target.value})}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="scheduled_departure">Data/Hora de Saída *</Label>
-                    <Input
-                      id="scheduled_departure"
-                      type="datetime-local"
-                      value={formData.scheduled_departure}
-                      onChange={(e) => setFormData({...formData, scheduled_departure: e.target.value})}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="scheduled_return">Data/Hora de Retorno *</Label>
-                    <Input
-                      id="scheduled_return"
-                      type="datetime-local"
-                      value={formData.scheduled_return}
-                      onChange={(e) => setFormData({...formData, scheduled_return: e.target.value})}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="priority">Prioridade</Label>
-                    <Select
-                      value={formData.priority}
-                      onValueChange={(value) => setFormData({...formData, priority: value})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(priorityLabels).map(([value, label]) => (
-                          <SelectItem key={value} value={value}>
-                            {label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="status">Status</Label>
-                    <Select
-                      value={formData.status}
-                      onValueChange={(value) => setFormData({...formData, status: value})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(statusLabels).map(([value, label]) => (
-                          <SelectItem key={value} value={value}>
-                            {label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="notes">Observações</Label>
-                  <Textarea
-                    id="notes"
-                    value={formData.notes}
-                    onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                    rows={3}
-                  />
-                </div>
-                <div className="flex justify-end gap-3 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsDialogOpen(false)}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    className="ds-primary text-white"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? "Salvando..." : selectedSchedule ? "Atualizar" : "Criar"}
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
         </div>
 
         {/* Search */}

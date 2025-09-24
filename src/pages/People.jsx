@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { FirestoreService } from "@/firebase/services";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -216,198 +216,227 @@ export default function People() {
   };
 
   return (
-    <div className="p-4 md:p-8 min-h-screen">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Gestão de Funcionários</h1>
-            <p className="text-gray-600 mt-1">Gerencie os funcionários habilitados para dirigir</p>
-          </div>
-          
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button 
-                className="ds-primary text-white shadow-lg hover:shadow-xl transition-all duration-300"
-                onClick={resetForm}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Novo Funcionário
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>
-                  {selectedPerson ? "Editar Funcionário" : "Novo Funcionário"}
-                </DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="name">Nome Completo *</Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => setFormData({...formData, name: e.target.value})}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="email">E-mail *</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({...formData, email: e.target.value})}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="phone">Telefone</Label>
-                    <Input
-                      id="phone"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                      placeholder="(11) 99999-9999"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="department">Departamento</Label>
-                    <Input
-                      id="department"
-                      value={formData.department}
-                      onChange={(e) => setFormData({...formData, department: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="position">Cargo</Label>
-                    <Input
-                      id="position"
-                      value={formData.position}
-                      onChange={(e) => setFormData({...formData, position: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="status">Status</Label>
-                    <Select
-                      value={formData.status}
-                      onValueChange={(value) => setFormData({...formData, status: value})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(statusLabels).map(([value, label]) => (
-                          <SelectItem key={value} value={value}>
-                            {label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="driver_license">Número da CNH</Label>
-                    <Input
-                      id="driver_license"
-                      value={formData.driver_license}
-                      onChange={(e) => setFormData({...formData, driver_license: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="license_category">Categoria da CNH</Label>
-                    <Select
-                      value={formData.license_category}
-                      onValueChange={(value) => setFormData({...formData, license_category: value})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecionar categoria" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {licenseCategories.map((category) => (
-                          <SelectItem key={category.value} value={category.value}>
-                            {category.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="md:col-span-2">
-                    <Label htmlFor="license_expiry">Vencimento da CNH</Label>
-                    <Input
-                      id="license_expiry"
-                      type="date"
-                      value={formData.license_expiry}
-                      onChange={(e) => setFormData({...formData, license_expiry: e.target.value})}
-                    />
-                  </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-slate-100">
+      <div className="container mx-auto px-6 py-8">
+        {/* Header Profissional */}
+        <div className="mb-10">
+          <div className="flex items-center justify-between">
+            <div className="space-y-3">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                Gestão de Funcionários 👥
+              </h1>
+              <p className="text-lg text-gray-600 font-medium">
+                Gerencie os funcionários habilitados para dirigir
+              </p>
+              <div className="flex items-center gap-6 text-sm text-gray-500">
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4" />
+                  <span>{filteredPeople.length} funcionários encontrados</span>
                 </div>
-                <div>
-                  <Label htmlFor="notes">Observações</Label>
-                  <Textarea
-                    id="notes"
-                    value={formData.notes}
-                    onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                    rows={3}
-                  />
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                  <span>{filteredPeople.filter(p => p.status === 'active').length} ativos</span>
                 </div>
-                <div className="flex justify-end gap-3 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsDialogOpen(false)}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    className="ds-primary text-white"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? "Salvando..." : selectedPerson ? "Atualizar" : "Criar"}
-                  </Button>
-                  {selectedPerson && (currentUser?.role === "MASTER" || currentUser?.role === "ADMIN") && (
+              </div>
+            </div>
+            
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  className="h-12 px-6 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
+                  onClick={resetForm}
+                >
+                  <Plus className="w-5 h-5 mr-2" />
+                  Novo Funcionário
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>
+                    {selectedPerson ? "Editar Funcionário" : "Novo Funcionário"}
+                  </DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="name">Nome Completo *</Label>
+                      <Input
+                        id="name"
+                        value={formData.name}
+                        onChange={(e) => setFormData({...formData, name: e.target.value})}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="email">E-mail *</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData({...formData, email: e.target.value})}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="phone">Telefone</Label>
+                      <Input
+                        id="phone"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                        placeholder="(11) 99999-9999"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="department">Departamento</Label>
+                      <Input
+                        id="department"
+                        value={formData.department}
+                        onChange={(e) => setFormData({...formData, department: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="position">Cargo</Label>
+                      <Input
+                        id="position"
+                        value={formData.position}
+                        onChange={(e) => setFormData({...formData, position: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="status">Status</Label>
+                      <Select
+                        value={formData.status}
+                        onValueChange={(value) => setFormData({...formData, status: value})}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(statusLabels).map(([value, label]) => (
+                            <SelectItem key={value} value={value}>
+                              {label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="driver_license">Número da CNH</Label>
+                      <Input
+                        id="driver_license"
+                        value={formData.driver_license}
+                        onChange={(e) => setFormData({...formData, driver_license: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="license_category">Categoria da CNH</Label>
+                      <Select
+                        value={formData.license_category}
+                        onValueChange={(value) => setFormData({...formData, license_category: value})}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecionar categoria" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {licenseCategories.map((category) => (
+                            <SelectItem key={category.value} value={category.value}>
+                              {category.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label htmlFor="license_expiry">Vencimento da CNH</Label>
+                      <Input
+                        id="license_expiry"
+                        type="date"
+                        value={formData.license_expiry}
+                        onChange={(e) => setFormData({...formData, license_expiry: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="notes">Observações</Label>
+                    <Textarea
+                      id="notes"
+                      value={formData.notes}
+                      onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                      rows={3}
+                    />
+                  </div>
+                  <div className="flex justify-end gap-3 pt-4">
                     <Button
                       type="button"
-                      variant="destructive"
-                      onClick={() => {
-                        setIsDialogOpen(false);
-                        handleDeleteClick(selectedPerson);
-                      }}
+                      variant="outline"
+                      onClick={() => setIsDialogOpen(false)}
                     >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Excluir
+                      Cancelar
                     </Button>
-                  )}
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
+                    <Button 
+                      type="submit" 
+                      className="ds-primary text-white"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Salvando..." : selectedPerson ? "Atualizar" : "Criar"}
+                    </Button>
+                    {selectedPerson && (currentUser?.role === "MASTER" || currentUser?.role === "ADMIN") && (
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        onClick={() => {
+                          setIsDialogOpen(false);
+                          handleDeleteClick(selectedPerson);
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Excluir
+                      </Button>
+                    )}
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
-        {/* Search */}
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <Input
-            placeholder="Buscar funcionários..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+        {/* Search e Filtros */}
+        <div className="mb-8">
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="relative max-w-md w-full">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Input
+                placeholder="Buscar por nome, email, departamento ou cargo..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-12 h-12 border-gray-200 focus:border-green-500 focus:ring-green-500/20 transition-all duration-200 bg-white/80 backdrop-blur-sm"
+              />
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="text-sm text-gray-600">
+                <span className="font-semibold">{filteredPeople.length}</span> de <span className="font-semibold">{people.length}</span> funcionários
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* People Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredPeople.map((person) => (
-            <Card key={person.id} className="glass-card border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-              <CardHeader className="pb-3">
+            <Card key={person.id} className="glass-card border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white/80 backdrop-blur-sm">
+              <CardHeader className="pb-4">
                 <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-lg font-bold text-gray-900">
+                  <div className="space-y-2">
+                    <CardTitle className="text-xl font-bold text-gray-900">
                       {person.name}
                     </CardTitle>
-                    <p className="text-sm text-gray-500">{person.position}</p>
+                    <p className="text-sm text-gray-600 font-medium">{person.position}</p>
+                    <div className="flex items-center gap-2">
+                      <Building className="w-4 h-4 text-gray-400" />
+                      <span className="text-sm text-gray-500">{person.department}</span>
+                    </div>
                   </div>
-                  <Badge className={statusColors[person.status]}>
+                  <Badge className={`px-3 py-1 font-semibold ${statusColors[person.status]}`}>
                     {statusLabels[person.status]}
                   </Badge>
                 </div>

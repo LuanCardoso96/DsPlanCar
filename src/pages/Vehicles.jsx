@@ -223,229 +223,258 @@ export default function Vehicles() {
   };
 
   return (
-    <div className="p-4 md:p-8 min-h-screen">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Gestão de Veículos</h1>
-            <p className="text-gray-600 mt-1">Gerencie a frota de veículos da empresa</p>
-          </div>
-          
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button 
-                className="ds-primary text-white shadow-lg hover:shadow-xl transition-all duration-300"
-                onClick={resetForm}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Novo Veículo
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>
-                  {selectedVehicle ? "Editar Veículo" : "Novo Veículo"}
-                </DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="brand">Marca *</Label>
-                    <Input
-                      id="brand"
-                      value={formData.brand}
-                      onChange={(e) => setFormData({...formData, brand: e.target.value})}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="model">Modelo *</Label>
-                    <Input
-                      id="model"
-                      value={formData.model}
-                      onChange={(e) => setFormData({...formData, model: e.target.value})}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="year">Ano</Label>
-                    <Input
-                      id="year"
-                      type="number"
-                      value={formData.year}
-                      onChange={(e) => setFormData({...formData, year: parseInt(e.target.value)})}
-                      min="1950"
-                      max={new Date().getFullYear() + 1}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="license_plate">Placa *</Label>
-                    <Input
-                      id="license_plate"
-                      value={formData.license_plate}
-                      onChange={(e) => setFormData({...formData, license_plate: e.target.value.toUpperCase()})}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="color">Cor</Label>
-                    <Input
-                      id="color"
-                      value={formData.color}
-                      onChange={(e) => setFormData({...formData, color: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="vehicle_type">Tipo</Label>
-                    <Select
-                      value={formData.vehicle_type}
-                      onValueChange={(value) => setFormData({...formData, vehicle_type: value})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {vehicleTypes.map((type) => (
-                          <SelectItem key={type.value} value={type.value}>
-                            {type.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="fuel_type">Combustível</Label>
-                    <Select
-                      value={formData.fuel_type}
-                      onValueChange={(value) => setFormData({...formData, fuel_type: value})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {fuelTypes.map((fuel) => (
-                          <SelectItem key={fuel.value} value={fuel.value}>
-                            {fuel.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="status">Status</Label>
-                    <Select
-                      value={formData.status}
-                      onValueChange={(value) => setFormData({...formData, status: value})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(statusLabels).map(([value, label]) => (
-                          <SelectItem key={value} value={value}>
-                            {label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="mileage">Quilometragem</Label>
-                    <Input
-                      id="mileage"
-                      type="number"
-                      value={formData.mileage}
-                      onChange={(e) => setFormData({...formData, mileage: parseFloat(e.target.value)})}
-                      min="0"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="insurance_expiry">Vencimento do Seguro</Label>
-                    <Input
-                      id="insurance_expiry"
-                      type="date"
-                      value={formData.insurance_expiry}
-                      onChange={(e) => setFormData({...formData, insurance_expiry: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="license_expiry">Vencimento do Licenciamento</Label>
-                    <Input
-                      id="license_expiry"
-                      type="date"
-                      value={formData.license_expiry}
-                      onChange={(e) => setFormData({...formData, license_expiry: e.target.value})}
-                    />
-                  </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-slate-100">
+      <div className="container mx-auto px-6 py-8">
+        {/* Header Profissional */}
+        <div className="mb-10">
+          <div className="flex items-center justify-between">
+            <div className="space-y-3">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                Gestão de Veículos 🚗
+              </h1>
+              <p className="text-lg text-gray-600 font-medium">
+                Gerencie a frota de veículos da empresa
+              </p>
+              <div className="flex items-center gap-6 text-sm text-gray-500">
+                <div className="flex items-center gap-2">
+                  <Car className="w-4 h-4" />
+                  <span>{filteredVehicles.length} veículos encontrados</span>
                 </div>
-                <div>
-                  <Label htmlFor="notes">Observações</Label>
-                  <Textarea
-                    id="notes"
-                    value={formData.notes}
-                    onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                    rows={3}
-                  />
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                  <span>{filteredVehicles.filter(v => v.status === 'available').length} disponíveis</span>
                 </div>
-                <div className="flex justify-end gap-3 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsDialogOpen(false)}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    className="ds-primary text-white"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? "Salvando..." : selectedVehicle ? "Atualizar" : "Criar"}
-                  </Button>
-                  {selectedVehicle && (currentUser?.role === "MASTER" || currentUser?.role === "ADMIN") && (
+              </div>
+            </div>
+            
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  className="h-12 px-6 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
+                  onClick={resetForm}
+                >
+                  <Plus className="w-5 h-5 mr-2" />
+                  Novo Veículo
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>
+                    {selectedVehicle ? "Editar Veículo" : "Novo Veículo"}
+                  </DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="brand">Marca *</Label>
+                      <Input
+                        id="brand"
+                        value={formData.brand}
+                        onChange={(e) => setFormData({...formData, brand: e.target.value})}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="model">Modelo *</Label>
+                      <Input
+                        id="model"
+                        value={formData.model}
+                        onChange={(e) => setFormData({...formData, model: e.target.value})}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="year">Ano</Label>
+                      <Input
+                        id="year"
+                        type="number"
+                        value={formData.year}
+                        onChange={(e) => setFormData({...formData, year: parseInt(e.target.value)})}
+                        min="1950"
+                        max={new Date().getFullYear() + 1}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="license_plate">Placa *</Label>
+                      <Input
+                        id="license_plate"
+                        value={formData.license_plate}
+                        onChange={(e) => setFormData({...formData, license_plate: e.target.value.toUpperCase()})}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="color">Cor</Label>
+                      <Input
+                        id="color"
+                        value={formData.color}
+                        onChange={(e) => setFormData({...formData, color: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="vehicle_type">Tipo</Label>
+                      <Select
+                        value={formData.vehicle_type}
+                        onValueChange={(value) => setFormData({...formData, vehicle_type: value})}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {vehicleTypes.map((type) => (
+                            <SelectItem key={type.value} value={type.value}>
+                              {type.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="fuel_type">Combustível</Label>
+                      <Select
+                        value={formData.fuel_type}
+                        onValueChange={(value) => setFormData({...formData, fuel_type: value})}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {fuelTypes.map((fuel) => (
+                            <SelectItem key={fuel.value} value={fuel.value}>
+                              {fuel.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="status">Status</Label>
+                      <Select
+                        value={formData.status}
+                        onValueChange={(value) => setFormData({...formData, status: value})}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(statusLabels).map(([value, label]) => (
+                            <SelectItem key={value} value={value}>
+                              {label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="mileage">Quilometragem</Label>
+                      <Input
+                        id="mileage"
+                        type="number"
+                        value={formData.mileage}
+                        onChange={(e) => setFormData({...formData, mileage: parseFloat(e.target.value)})}
+                        min="0"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="insurance_expiry">Vencimento do Seguro</Label>
+                      <Input
+                        id="insurance_expiry"
+                        type="date"
+                        value={formData.insurance_expiry}
+                        onChange={(e) => setFormData({...formData, insurance_expiry: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="license_expiry">Vencimento do Licenciamento</Label>
+                      <Input
+                        id="license_expiry"
+                        type="date"
+                        value={formData.license_expiry}
+                        onChange={(e) => setFormData({...formData, license_expiry: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="notes">Observações</Label>
+                    <Textarea
+                      id="notes"
+                      value={formData.notes}
+                      onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                      rows={3}
+                    />
+                  </div>
+                  <div className="flex justify-end gap-3 pt-4">
                     <Button
                       type="button"
-                      variant="destructive"
-                      onClick={() => {
-                        setIsDialogOpen(false);
-                        handleDeleteClick(selectedVehicle);
-                      }}
+                      variant="outline"
+                      onClick={() => setIsDialogOpen(false)}
                     >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Excluir
+                      Cancelar
                     </Button>
-                  )}
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
+                    <Button 
+                      type="submit" 
+                      className="ds-primary text-white"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Salvando..." : selectedVehicle ? "Atualizar" : "Criar"}
+                    </Button>
+                    {selectedVehicle && (currentUser?.role === "MASTER" || currentUser?.role === "ADMIN") && (
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        onClick={() => {
+                          setIsDialogOpen(false);
+                          handleDeleteClick(selectedVehicle);
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Excluir
+                      </Button>
+                    )}
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
-        {/* Search */}
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <Input
-            placeholder="Buscar veículos..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+        {/* Search e Filtros */}
+        <div className="mb-8">
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="relative max-w-md w-full">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Input
+                placeholder="Buscar por marca, modelo, placa ou cor..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-12 h-12 border-gray-200 focus:border-green-500 focus:ring-green-500/20 transition-all duration-200 bg-white/80 backdrop-blur-sm"
+              />
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="text-sm text-gray-600">
+                <span className="font-semibold">{filteredVehicles.length}</span> de <span className="font-semibold">{vehicles.length}</span> veículos
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Vehicles Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredVehicles.map((vehicle) => (
-            <Card key={vehicle.id} className="glass-card border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-              <CardHeader className="pb-3">
+            <Card key={vehicle.id} className="glass-card border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white/80 backdrop-blur-sm">
+              <CardHeader className="pb-4">
                 <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-lg font-bold text-gray-900">
+                  <div className="space-y-2">
+                    <CardTitle className="text-xl font-bold text-gray-900">
                       {vehicle.brand} {vehicle.model}
                     </CardTitle>
-                    <p className="text-sm text-gray-500">{vehicle.year}</p>
+                    <p className="text-sm text-gray-600 font-medium">{vehicle.year}</p>
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-gray-400" />
+                      <span className="text-sm text-gray-500">{vehicle.license_plate}</span>
+                    </div>
                   </div>
-                  <Badge className={statusColors[vehicle.status]}>
+                  <Badge className={`px-3 py-1 font-semibold ${statusColors[vehicle.status]}`}>
                     {statusLabels[vehicle.status]}
                   </Badge>
                 </div>
